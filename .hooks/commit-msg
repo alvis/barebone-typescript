@@ -1,0 +1,42 @@
+#!/bin/sh
+
+MESSAGE_FILE=$1
+
+# check if the message file exists
+if [ ! -e "$MESSAGE_FILE" ]
+then
+  echo "The message file is missing."
+  exit 1
+fi
+
+# wait until the check has returned
+RESULT_CODE=1
+for _ in $(seq 1 60)
+do
+  RESULT=$(git notes --ref quickcheck show "$(git rev-list --max-parents=0 HEAD)" 2>/dev/null)
+  RESULT_CODE=$?
+  if [ $RESULT_CODE -eq 0 ]
+  then
+    break
+  fi
+  sleep 1
+done
+
+# exit as there may be a problem with the queue
+if [ $RESULT_CODE -eq 1 ]
+then
+  echo "The result doesn't show up in 60s. May be there is something blocking."
+  exit 1
+fi
+
+# remove the trace
+git notes --ref quickcheck remove "$(git rev-list --max-parents=0 HEAD)" 1>/dev/null
+
+# return the error message if the check fails
+if [ "$RESULT" != "pass" ]
+then
+  echo "$RESULT"
+  exit 1
+fi
+
+exit 0

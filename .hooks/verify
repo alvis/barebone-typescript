@@ -1,0 +1,158 @@
+#!/bin/sh
+
+MODE=$1
+REV=$2
+
+# a handy procedue to handle the result
+quick_check() {
+  CODE=$?
+  SOURCE=$1
+  RESULT=$2
+
+   # if there is an error, store it at root
+  [ $CODE -ne 0 ] && \
+    git notes --ref quickcheck add -f -m "[${SOURCE}]\n${RESULT}" "$(git rev-list --max-parents=0 HEAD)" && \
+    exit $CODE
+}
+
+# style check on changed files only
+quick(){
+  # list the changed files
+  CHANGES=$(git diff --name-only --cached | grep -E "(source|spec)\/.*\.ts")
+
+  # check for integrity
+  quick_check typescript "$("$(npm bin)/tsc" --noEmit 2>&1)"
+
+  # format the code with prettier
+  quick_check prettier "$(echo "$CHANGES" | xargs "$(npm bin)/prettier" --write 2>&1)"
+
+  # check and fix the remaining style issues with tslint
+  quick_check tslint "$(echo "$CHANGES" | "$(npm bin)/tslint" --project tsconfig.json --config tslint.json --fix 2>&1)"
+
+  # store the result at root
+  git notes --ref quickcheck add -f -m "pass" "$(git rev-list --max-parents=0 HEAD)"
+
+  exit 0
+}
+
+# procedure for a full check
+full_check() {
+  MODE=$1
+  REV=$2
+  GIT_PATH=$3
+
+  # run the test
+  MESSAGE=$(npm run "$MODE" 2>&1)
+
+  # say pass if the test is a success, or the error content if it fails
+  CODE=$?
+  if [ $CODE -eq 0 ]
+  then
+    MESSAGE="pass"
+  fi
+
+  git --git-dir="$GIT_PATH" notes --ref "$MODE" add -f -m "$MESSAGE" "$REV" 1>/dev/null 2>&1
+
+  # return with the exit code of the test
+  return $CODE
+}
+
+# check if a note exists
+is_note_exists() {
+  TYPE=$1
+  REV=$2
+
+  # try to retrieve the note
+  git notes --ref "$TYPE" show "$REV" 1>/dev/null 2>&1
+  GIT_CODE=$?
+
+  if [ $GIT_CODE -eq 0 ]
+  then
+    echo 1
+  else
+    echo 0
+  fi
+}
+
+# full check on all files
+full() {
+  # set the default "$REV" to HEAD
+  REV=${REV:-"HEAD"}
+
+  # check if the test has been done
+  case $MODE in
+    "lint" | "test")
+      if [ "$(is_note_exists "$MODE" "$REV")" = "0" ]
+      then
+        SHOULD_CHECK=true
+      fi
+      ;;
+    "full")
+      if [ "$(is_note_exists lint "$REV")" = "0" ] || [ "$(is_note_exists test "$REV")" = "0" ]
+      then
+        SHOULD_CHECK=true
+      fi
+     ;;
+  esac
+
+  if [ $SHOULD_CHECK ]
+  then
+    # store the path of the repository
+    GIT_PATH=$(cd "$(git rev-parse --git-dir)" && pwd)
+
+    # copy the content to a temporary directory
+    TMP=$(mktemp -d)
+    mkdir "$TMP/.git"
+    GIT=$(git --work-tree="$TMP" checkout "$REV" -- . 2>&1)
+    GIT_CODE=$?
+    if [ $GIT_CODE -ne 0 ]
+    then
+      echo "$GIT" > /dev/stderr
+      exit 1
+    fi
+
+    # install the dependencies
+    cd "$TMP" || (echo "$TMP" is missing && exit 1)
+    case $MODE in
+      "lint")
+        npm install --only=dev 1>/dev/null 2>&1
+        full_check lint "$REV" "$GIT_PATH"
+        exit $?
+        ;;
+      "test")
+        npm install 1>/dev/null 2>&1
+        full_check test "$REV" "$GIT_PATH"
+        exit $?
+        ;;
+      "full")
+        npm install 1>/dev/null 2>&1
+
+        full_check lint "$REV" "$GIT_PATH"
+        LINT_CODE=$?
+
+        full_check test "$REV" "$GIT_PATH"
+        TEST_CODE=$?
+
+        if [ $LINT_CODE -ne 0 ] || [ $TEST_CODE -ne 0 ]
+        then
+          exit 1
+        fi
+        ;;
+    esac
+  fi
+
+  exit 0;
+}
+
+# either lint or test is accepted
+case $MODE in
+  "lint" | "test" | "full")
+    full "$MODE"
+    ;;
+  "quick")
+    quick
+    ;;
+  *)
+    echo "The accepted modes are 'lint', 'test', full and 'quick'."
+    exit 1 ;;
+esac

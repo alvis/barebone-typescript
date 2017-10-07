@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "factory",
+    "target": "ESNext",
+    "allowSyntheticDefaultImports": true,
+    "alwaysStrict": true,
+    "declaration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "isolatedModules": false,
+    "noImplicitAny": false,
+    "noImplicitUseStrict": false,
+    "noLib": false,
+    "noResolve": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "preserveConstEnums": true,
+    "removeComments": true,
+    "sourceMap": false,
+    "strictNullChecks": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "lib": [
+      "ESNext"
+    ],
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "include": [
+    "source/**/*.ts",
+    "specs/**/*.ts"
+  ]
+}

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+link() {
+  ln -sf "../../.hooks/$1" "$(git rev-parse --git-dir)/hooks/$1"
+}
+
+link commit-msg
+link post-commit
+link post-merge
+link post-rewrite
+link pre-push
+link prepare-commit-msg

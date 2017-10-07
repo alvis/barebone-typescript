@@ -1,0 +1,165 @@
+#!/bin/sh
+
+IS_LINTING=0
+IS_TESTING=0
+REVS=$(git rev-list --reverse "$(git rev-parse --abbrev-ref HEAD)" --abbrev-commit --not --remotes);
+
+check_status() {
+  MODE=$1
+  for REV in $REVS;
+  do
+    LINT_RESULT=$(git notes --ref "$MODE" show "$REV" 2>/dev/null)
+    LINT_CODE=$?
+    if [ $LINT_CODE -eq 0 ]
+    then
+      # report the problem as soon as it is detected
+      test_result "style guide" "$REV" "$LINT_RESULT"
+    else
+      # return 1 for not being ready
+      return 1
+    fi
+  done
+
+  # return 0 for a signal of success
+  return 0
+}
+
+get_queue_size() {
+  at -l | wc -l | awk '{print $1}'
+}
+
+test_result() {
+  MODE=$1
+  REV=$2
+  RESULT=$3
+  if [ "$RESULT" != "pass" ]
+  then
+    echo "Commit $REV ($(git show -s --format=%s "$REV")) does not meet the $MODE. The check returns the following:"
+    git notes --ref="$MODE" show "$REV" | cat
+    exit 1
+  fi
+}
+
+wait_for_linting() {
+  if [ $IS_LINTING ]
+  then
+    # wait until the check has returned
+    for _ in $(seq 1 300)
+    do
+      check_status lint
+      CODE=$?
+      if [ $CODE -eq 0 ]
+      then
+        IS_LINTING=0
+        return 0
+      fi
+      sleep 1
+    done
+
+    # return with error as linting should be typically short
+    return 1
+  fi
+
+  # return with success as no linting process is running
+  return 0
+}
+
+wait_for_testing() {
+  if [ $IS_TESTING ]
+  then
+    QUEUE_SIZE_AT_START=$(get_queue_size)
+    # wait until the check has returned
+    for _ in $(seq 1 300)
+    do
+      check_status test
+      CODE=$?
+      if [ $CODE -eq 0 ]
+      then
+        IS_TESTING=0
+        return 0
+       fi
+      sleep 1
+    done
+
+    # check if the queue is moving
+    if [ "$QUEUE_SIZE_AT_START" != "$(get_queue_size)" ]
+    then
+      # wait for another 5 minutes as the queue is moving
+      wait_for_testing
+    fi
+
+    # return with error as no test has managed to finish in 5 minutes
+    return 1
+  fi
+
+  # return with success as no test is running
+  return 0
+}
+
+for REV in $REVS;
+do
+  SHOULD_LINT=0
+  SHOULD_TEST=0
+  LINT_RESULT=$(git notes --ref lint show "$REV" 2>/dev/null)
+  LINT_CODE=$?
+  if [ $LINT_CODE -eq 0 ]
+  then
+    # report the problem as soon as it is detected
+    test_result "style guide" "$REV" "$LINT_RESULT"
+  else
+    # start linting in the background if no record has been found
+    IS_LINTING=1
+    SHOULD_LINT=1
+  fi
+
+  TEST_RESULT=$(git notes --ref test show "$REV" 2>/dev/null)
+  TEST_CODE=$?
+  if [ $TEST_CODE -eq 0 ]
+  then
+    # report the problem as soon as it is detected
+    test_result "test" "$REV" "$TEST_RESULT"
+  else
+    # queue the test
+    IS_TESTING=1
+    SHOULD_TEST=1
+  fi
+
+  if [ $SHOULD_LINT -eq 1 ] && [ $SHOULD_TEST -eq 1 ]
+  then
+   "$(git rev-parse --git-dir)/../.hooks/verify" full "$REV"
+  elif [ $SHOULD_LINT -eq 1 ]
+  then
+    "$(git rev-parse --git-dir)/../.hooks/verify" lint "$REV"
+  elif [ $SHOULD_TEST -eq 1 ]
+  then
+    "$(git rev-parse --git-dir)/../.hooks/verify" test "$REV"
+  fi
+done
+
+check_status test
+check_status lint
+
+exit 0
+
+# wait_for_linting
+# if [ $IS_LINTING -eq 1 ]
+# then
+#   echo "The style check hasn't finished in 5 minutes. If you are pushing lots of commits, try again later."
+#   exit 1
+# fi
+
+# wait_for_testing
+
+# if [ $IS_TESTING -eq 1 ]
+# then
+#   echo "The queue for testing hasn't changed in the last 5 minutes. There are several possibilities:"
+#   echo "1. Your system is under high loading."
+#   echo "2. Some of the tests may really take time."
+#   echo "3. The queuing system is diabled."
+#   echo "For 1 & 2, check if the queue is moving in later time by \e[4mat -l\e[0m."
+#   echo "For 3, check if \e[4mat\e[0m is running. If you are running on MacOS, at is disabled by default. Checkout \e[4mman atrun\e[0m for the system specific way to enable the service."
+#   exit 1
+# fi
+
+
+#git push ${REMOTE} ${rev}:${REMOTE_BRANCH_REFERENCE} $1

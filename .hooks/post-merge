@@ -1,0 +1,6 @@
+#!/bin/sh
+
+REV=$(git rev-parse --verify HEAD)
+
+# call a full test as a merge may affect its stability
+sh -c "$(git rev-parse --git-dir)/../.hooks/verify full $REV" &

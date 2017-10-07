@@ -1,0 +1,85 @@
+{
+  "name": "barebone-typescript",
+  "version": "1.0.0",
+  "engines": {
+    "node": "~8.4.0"
+  },
+  "description": "An opinionated foundation for a typescript project.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "run-s clean lint test build:*",
+    "build:typescript": "tsc",
+    "clean": "run-p clean:*",
+    "clean:factory": "rm -rf factory",
+    "clean:lib": "rm -rf lib",
+    "lint": "tslint --project tsconfig.json",
+    "prepare": "run-s test build prepare:* clean:factory",
+    "prepare:dist": "mkdir lib && cp -R factory/source/* lib",
+    "release": "standard-version",
+    "test": "jest --coverage --no-cache --passWithNoTests",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --no-cache --passWithNoTests --runInBand"
+  },
+  "jest": {
+    "bail": true,
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "specs/**/*.ts?(x)"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 95,
+        "functions": 95,
+        "lines": 95,
+        "statements": 95
+      }
+    },
+    "globals": {
+      "ignoreCoverageForAllDecorators": true,
+      "ts-jest": {
+        "tsConfig": {
+          "allowJs": true
+        }
+      }
+    },
+    "moduleNameMapper": {
+      "#(.*)": "<rootDir>/source/$1"
+    },
+    "preset": "ts-jest",
+    "resetModules": true,
+    "roots": [
+      "<rootDir>/specs/"
+    ],
+    "testEnvironment": "node"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alvis/barebone-typescript.git"
+  },
+  "keywords": [
+    "typrscript",
+    "foundation",
+    "template"
+  ],
+  "author": "Alvis HT Tang <alvis@hilbert.space>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alvis/barebone-typescript/issues"
+  },
+  "homepage": "https://github.com/alvis/barebone-typescript#readme",
+  "devDependencies": {
+    "@types/jest": "^23.3.0",
+    "@types/node": "^8.4.0",
+    "jest": "^23.6.0",
+    "leakage": "^0.3.0",
+    "npm-run-all": "^4.1.0",
+    "prettier": "^1.10.0",
+    "shx": "^0.3.0",
+    "standard-version": "^4.3.0",
+    "ts-jest": "^23.10.0",
+    "tslint": "^5.9.0",
+    "typescript": "^2.7.0"
+  },
+  "dependencies": {
+  }
+}

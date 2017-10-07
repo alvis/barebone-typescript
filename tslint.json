@@ -1,0 +1,156 @@
+{
+  "defaultSeverity": "warning",
+  "linterOptions": {
+    "typeCheck": true
+  },
+  "rules": {
+    "adjacent-overload-signatures": true,
+    "ban-types": false,
+    "member-ordering": [
+      true,
+      {
+        "order": [
+          "static-field",
+          "instance-field",
+          "constructor",
+          "public-instance-method",
+          "protected-instance-method",
+          "private-instance-method"
+        ]
+      }
+    ],
+    "no-any": false,
+    "no-empty-interface": false,
+    "no-inferrable-types": [true, "ignore-params", "ignore-properties"],
+    "no-internal-module": true,
+    "no-namespace": false,
+    "no-var-requires": true,
+    "only-arrow-functions": [true, "allow-declarations"],
+    "prefer-for-of": true,
+    "promise-function-async": true,
+    "typedef": [
+      true,
+      "call-signature",
+      "arrow-call-signature",
+      "parameter",
+      "property-declaration",
+      "member-variable-declaration"
+    ],
+    "typedef-whitespace": [
+      true,
+      {
+        "call-signature": "nospace",
+        "index-signature": "nospace",
+        "parameter": "nospace",
+        "property-declaration": "nospace",
+        "variable-declaration": "nospace"
+      },
+      {
+        "call-signature": "onespace",
+        "index-signature": "onespace",
+        "parameter": "onespace",
+        "property-declaration": "onespace",
+        "variable-declaration": "onespace"
+      }
+    ],
+
+    "await-promise": [true, "Thenable", "Bluebird"],
+    "curly": [true, "ignore-same-line"],
+    "no-console": true,
+    "no-conditional-assignment": true,
+    "no-duplicate-super": true,
+    "no-empty": true,
+    "no-eval": true,
+    "no-for-in-array": true,
+    "no-invalid-template-strings": true,
+    "no-sparse-arrays": true,
+    "no-string-throw": true,
+    "no-submodule-imports": false,
+    "no-unbound-method": false,
+    "no-unsafe-finally": true,
+    "no-unused-expression": [true, "allow-fast-null-checks", "allow-new"],
+    "no-var-keyword": true,
+    "prefer-object-spread": true,
+    "strict-type-predicates": false,
+    "switch-default": true,
+    "triple-equals": [true, "allow-null-check", "allow-undefined-check"],
+
+    "eofline": true,
+    "indent": [true, "spaces"],
+    "linebreak-style": [true, "LF"],
+    "no-trailing-whitespace": true,
+    "prefer-const": [true, { "destructuring": "all" }],
+
+    "align": [true, "elements", "members", "statements"],
+    "array-type": [true, "array-simple"],
+    "arrow-parens": [true, "ban-single-arg-parens"],
+    "arrow-return-shorthand": [true, "multiline"],
+    "callable-types": true,
+    "class-name": true,
+    "comment-format": [
+      true,
+      "check-lowercase",
+      {
+        "ignore-words": ["TODO"]
+      }
+    ],
+    "completed-docs": true,
+    "file-header": [true, "copyright"],
+    "import-spacing": true,
+    "interface-name": [true, "never-prefix"],
+    "interface-over-type-literal": true,
+    "jsdoc-format": [true, "check-multiline-start"],
+    "newline-before-return": true,
+    "new-parens": true,
+    "no-angle-bracket-type-assertion": true,
+    "no-consecutive-blank-lines": true,
+    "no-parameter-properties": true,
+    "no-redundant-jsdoc": true,
+    "no-unnecessary-initializer": true,
+    "no-unnecessary-qualifier": true,
+    "object-literal-key-quotes": [true, "as-needed"],
+    "object-literal-shorthand": true,
+    "object-literal-sort-keys": false,
+    "one-line": [
+      true,
+      "check-catch",
+      "check-finally",
+      "check-else",
+      "check-open-brace",
+      "check-whitespace"
+    ],
+    "one-variable-per-declaration": [true, "ignore-for-loop"],
+    "ordered-imports": [true, { "named-imports-order": "lowercase-first" }],
+    "prefer-method-signature": true,
+    "quotemark": [true, "single", "jsx-double"],
+    "semicolon": [true, "always"],
+    "space-before-function-paren": [
+      true,
+      {
+        "anonymous": "never",
+        "named": "never",
+        "asyncArrow": "always",
+        "method": "never",
+        "constructor": "never"
+      }
+    ],
+    "variable-name": [
+      true,
+      "check-format",
+      "ban-keywords",
+      "allow-pascal-case",
+      "allow-leading-underscore"
+    ],
+    "whitespace": [
+      true,
+      "check-branch",
+      "check-decl",
+      "check-operator",
+      "check-module",
+      "check-separator",
+      "check-type",
+      "check-typecast",
+      "check-preblock"
+    ]
+  }
+}

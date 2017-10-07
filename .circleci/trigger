@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# run only when it is triggered by git push
+if [ ! $SKIP_TRIGGER ]
+then
+  # receive existent builds on circle ci
+    BUILDS=$(curl -s -u ${CIRCLE_TOKEN}: https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH | grep '"vcs_revision" :' | sed 's/.*: "\([a-z0-9]*\)",/\1/g' | sort | uniq)
+
+  # retrieve a list of parents
+  REVS=$(git log --pretty=%P -n 100 $CIRCLE_SHA1)
+
+  # exclude parents from existent builds
+  for EXCLUDE in $BUILDS
+  do
+    REVS=$(echo $REVS | sed s/$EXCLUDE//g)
+  done
+
+  # trigger builds for the rest of unbuilt parents
+  for REV in $REVS
+  do
+    curl \
+      --silent \
+      --user ${CIRCLE_TOKEN}: \
+      --header "Content-Type: application/json" \
+      --data "{\"revision\": \"$REV\", \"build_parameters\": {\"SKIP_TRIGGER\": \"TRUE\"}}" \
+      --request POST \
+      https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
+  done
+fi

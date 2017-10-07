@@ -1,0 +1,113 @@
+key-dev-dependencies: &key-dev-dependencies
+  key: dev-dependencies-{{ checksum "package.json" }}
+key-dependencies: &key-dependencies
+  key: dependencies-{{ checksum "package.json" }}-node-{{ checksum "/usr/local/bin/node" }}
+key-source: &key-source
+  key: source-{{ .Revision }}
+key-package: &key-package
+  key: package-{{ .Revision }}
+builder: &builder
+  docker:
+    - image: circleci/node:8.4
+test: &test
+  working_directory: /tmp/source
+  steps:
+    - restore_cache:
+        <<: *key-source
+    - restore_cache:
+        <<: *key-package
+    - restore_cache:
+        <<: *key-dependencies
+    - run:
+        name: Install Dependencies
+        command: npm install --ignore-scripts
+    - save_cache:
+        <<: *key-dependencies
+        paths:
+          - node_modules
+    - run:
+        name: Test
+        command: npm test
+
+version: 2
+jobs:
+  checkout:
+    <<: *builder
+    working_directory: /tmp/source
+    steps:
+      - checkout
+      - run:
+          name: Trigger Checks for Unchecked Commits
+          command: ./.circleci/trigger
+      - save_cache:
+          <<: *key-source
+          paths:
+            - ./
+      - restore_cache:
+          <<: *key-dev-dependencies
+      - run:
+          name: Install Development Dependencies
+          command: npm install --ignore-scripts --only=dev
+      - save_cache:
+          <<: *key-dev-dependencies
+          paths:
+            - node_modules
+  build:
+    <<: *builder
+    working_directory: /tmp/source
+    steps:
+      - restore_cache:
+          <<: *key-source
+      - restore_cache:
+          <<: *key-dev-dependencies
+      - run:
+          name: Package the Source
+          command: npm run prepare
+      - save_cache:
+          <<: *key-package
+          paths:
+            - package.json
+            - lib
+  lint:
+    <<: *builder
+    working_directory: /tmp/source
+    steps:
+      - restore_cache:
+          <<: *key-source
+      - restore_cache:
+          <<: *key-dev-dependencies
+      - run:
+          name: Check Code Style
+          command: npm run lint
+  node:latest:
+    docker:
+      - image: node:latest
+    <<: *test
+  node:8:
+    docker:
+      - image: node:8
+    <<: *test
+  node:6:
+    docker:
+      - image: node:6
+    <<: *test
+workflows:
+  version: 2
+  flow:
+    jobs:
+      - checkout
+      - build:
+          requires:
+            - checkout
+      - lint:
+          requires:
+            - checkout
+      - node:latest:
+          requires:
+            - build
+      - node:8:
+          requires:
+            - build
+      - node:6:
+          requires:
+            - build

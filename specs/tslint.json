@@ -1,0 +1,6 @@
+{
+  "extends": "../",
+  "rules": {
+    "no-implicit-dependencies": [true, "dev"]
+  }
+}
