@@ -1,0 +1,23 @@
+engines:
+  duplication:
+    enabled: false
+    config:
+      languages:
+  fixme:
+    enabled: true
+  git-legal:
+    enabled: true
+  markdownlint:
+    enabled: true
+  nodesecurity:
+    enabled: true
+  shellcheck:
+    enabled: true
+  tslint:
+    enabled: true
+    channel: beta
+    config: tslint.json
+ratings:
+  paths: []
+exclude_paths:
+  - node_modules/
