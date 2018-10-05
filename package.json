@@ -2,7 +2,7 @@
   "name": "barebone-typescript",
   "version": "1.0.0",
   "engines": {
-    "node": "~8.4.0"
+    "node": "~10.0.0"
   },
   "description": "An opinionated foundation for a typescript project.",
   "main": "lib/index.js",
@@ -69,7 +69,7 @@
   "homepage": "https://github.com/alvis/barebone-typescript#readme",
   "devDependencies": {
     "@types/jest": "^23.3.0",
-    "@types/node": "^8.4.0",
+    "@types/node": "^10.0.0",
     "jest": "^23.6.0",
     "leakage": "^0.3.0",
     "npm-run-all": "^4.1.0",
